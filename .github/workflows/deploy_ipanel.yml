@@ -1,82 +1,85 @@
-name: Laravel CI/CD
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-jobs:
-  # JOB 1: Ejecutar pruebas siempre (en PR y en Push a main)
-  laravel-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'
-    - uses: actions/checkout@v4
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-    - name: Validate composer
-      run: composer validate
-
-    - name: Show PHP version
-      run: php -v
-
-    - name: Show Composer version
-      run: composer --version
-
-    - name: Install Dependencies
-      run: composer install --prefer-dist --no-progress --no-interaction
+      laravel-tests:
+          runs-on: ubuntu-latest
+        
+          steps:
+            - uses: shivammathur/setup-php@v2
+              with:
+                php-version: '7.4'
+        
+            - uses: actions/checkout@v4
+        
+            - name: Copy .env
+              run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+        
+            - name: Validate composer
+              run: composer validate
+        
+            - name: Show PHP version
+              run: php -v
+        
+            - name: Show Composer version
+              run: composer --version
+        
+            - name: Prepare Laravel directories
+              run: |
+                mkdir -p storage/framework/cache
+                mkdir -p storage/framework/sessions
+                mkdir -p storage/framework/views
+                mkdir -p storage/framework/testing
+                mkdir -p storage/logs
+                mkdir -p bootstrap/cache
+        
+            - name: Directory Permissions
+              run: chmod -R 777 storage bootstrap/cache
+        
+            - name: Install Dependencies
+              run: composer install --prefer-dist --no-progress --no-interaction
+        
+            
+        
+            - name: Create Database
+              run: |
+                mkdir -p database
+                touch database/database.sqlite
+        
+            - name: Execute tests
+              env:
+                DB_CONNECTION: sqlite
+                DB_DATABASE: database/database.sqlite
+              run: php artisan test
       
-    - name: Generate key
-      run: php artisan key:generate
-    - name: Directory Permissions
-      run: chmod -R 777 storage bootstrap/cache
-    - name: Create Database
-      run: |
-        mkdir -p database
-        touch database/database.sqlite
-    - name: Execute tests
-      env:
-        DB_CONNECTION: sqlite
-        DB_DATABASE: database/database.sqlite
-      run: php artisan test
-
-  # JOB 2: Despliegue a iPanel (Solo se ejecuta si las pruebas pasan Y es un evento de PUSH a main / PR aprobado)
-  deploy:
-    needs: laravel-tests
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Desplegar vía SSH en iPanel
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.HOST_CLOUDPOLIEDRO }}
-        username: ${{ secrets.NAME_CLOUDPOLIEDRO }}
-        key: ${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}
-        port: 22
-        script: |
-         script: |
-          cd /home/sites/35a/1/165d81d6e0/testdeploy
-
-          git pull origin main
-
-          composer install --no-dev --optimize-autoloader
-
-          # Crear directorios necesarios de Laravel
-          mkdir -p storage/framework/cache
-          mkdir -p storage/framework/sessions
-          mkdir -p storage/framework/views
-          mkdir -p storage/framework/testing
-          mkdir -p storage/logs
-          mkdir -p bootstrap/cache
+          # JOB 2: Despliegue a iPanel (Solo se ejecuta si las pruebas pasan Y es un evento de PUSH a main / PR aprobado)
+      
+          
+        deploy:
+          needs: laravel-tests
+          if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+          runs-on: ubuntu-latest
         
-          # Permisos
-          chmod -R 775 storage bootstrap/cache
+          steps:
+            - name: Desplegar vía SSH en iPanel
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.HOST_CLOUDPOLIEDRO }}
+                username: ${{ secrets.NAME_CLOUDPOLIEDRO }}
+                key: ${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}
+                port: 22
+                script: |
+                  cd /home/sites/35a/1/165d81d6e0/testdeploy
+      
+                  git pull origin main
         
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
+                  mkdir -p storage/framework/cache
+                  mkdir -p storage/framework/sessions
+                  mkdir -p storage/framework/views
+                  mkdir -p storage/framework/testing
+                  mkdir -p storage/logs
+                  mkdir -p bootstrap/cache
+        
+                  chmod -R 775 storage bootstrap/cache
+        
+                  composer install --no-dev --optimize-autoloader --no-interaction
+        
+                  php artisan config:cache
+                  php artisan route:cache
+                  php artisan view:cache
