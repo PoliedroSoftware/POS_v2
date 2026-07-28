@@ -56,36 +56,17 @@ jobs:
           DB_DATABASE: database/database.sqlite
         run: vendor/bin/phpunit
 
-  deploy:
-    needs: laravel-tests
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-  
-    steps:
-      - name: Configurar SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.HOST_CLOUDPOLIEDRO }} >> ~/.ssh/known_hosts
-  
       - name: Deploy
         run: |
           ssh \
             -i ~/.ssh/id_ed25519 \
-            ${{ secrets.NAME_CLOUDPOLIEDRO }}@${{ secrets.HOST_CLOUDPOLIEDRO }} << 'EOF'
-          set -e
-  
-          cd /home/sites/35a/1/165d81d6e0/testdeploy
-  
-          pwd
-  
-          git pull origin main
-  
-          composer install --no-dev --optimize-autoloader --no-interaction
-  
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-  
-          EOF
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.NAME_CLOUDPOLIEDRO }}@${{ secrets.HOST_CLOUDPOLIEDRO }} \
+            "cd /home/sites/35a/1/165d81d6e0/testdeploy && \
+             git pull origin main && \
+             mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache && \
+             chmod -R 775 storage bootstrap/cache && \
+             composer install --no-dev --optimize-autoloader --no-interaction && \
+             php artisan config:cache && \
+             php artisan route:cache && \
+             php artisan view:cache"
