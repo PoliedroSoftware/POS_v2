@@ -60,7 +60,7 @@ jobs:
     needs: laravel-tests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-
+  
     steps:
       - name: Desplegar vía SSH en iPanel
         uses: appleboy/ssh-action@v1.0.3
@@ -70,24 +70,23 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}
           port: 22
           script: |
-            pwd
-            ls -la /home/sites/35a/1/165d81d6e0/
-            cd "/home/sites/35a/1/165d81d6e0/testdeploy"
-            pwd
-
-            git pull origin main
-
-            mkdir -p storage/framework/cache/data
-            mkdir -p storage/framework/sessions
-            mkdir -p storage/framework/views
-            mkdir -p storage/framework/testing
-            mkdir -p storage/logs
-            mkdir -p bootstrap/cache
-
-            chmod -R 775 storage bootstrap/cache
-
-            composer install --no-dev --optimize-autoloader --no-interaction
-
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            set -eux
+  
+            {
+              echo "===== Inicio $(date) ====="
+  
+              whoami
+              pwd
+  
+              ls -la
+  
+              cd /home/sites/35a/1/165d81d6e0/testdeploy
+  
+              pwd
+  
+              git status
+              git remote -v
+  
+              echo "===== Fin ====="
+  
+            } > /home/sites/35a/1/165d81d6e0/deploy.log 2>&1
