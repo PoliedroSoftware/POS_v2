@@ -1,10 +1,10 @@
-name: Tests
+name: Deploy iPanel
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
   laravel-tests:
@@ -54,7 +54,9 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
-        run: vendor/bin/phpunit
+        run: |
+          php artisan migrate --force
+          vendor/bin/phpunit
 
   deploy:
     needs: laravel-tests
