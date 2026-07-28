@@ -60,7 +60,7 @@ jobs:
         port: 22
         script: |
          script: |
-          cd /home/sites/35a/1/165d81d6e0/
+          cd /home/sites/35a/1/165d81d6e0/testdeploy
 
           git pull origin main
 
