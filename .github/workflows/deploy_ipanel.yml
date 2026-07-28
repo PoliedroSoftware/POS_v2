@@ -70,7 +70,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}
           port: 22
           script: |
-            cd /home/sites/35a/1/165d81d6e0/testdeploy
+            script: |
+            pwd
+            ls -la /home/sites/35a/1/165d81d6e0/
+            cd "/home/sites/35a/1/165d81d6e0/testdeploy"
+            pwd
 
             git pull origin main
 
