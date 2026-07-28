@@ -69,24 +69,9 @@ jobs:
           username: ${{ secrets.NAME_CLOUDPOLIEDRO }}
           key: ${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}
           port: 22
+          debug: true
+          request_pty: true
           script: |
-            set -eux
-  
-            {
-              echo "===== Inicio $(date) ====="
-  
-              whoami
-              pwd
-  
-              ls -la
-  
-              cd /home/sites/35a/1/165d81d6e0/testdeploy
-  
-              pwd
-  
-              git status
-              git remote -v
-  
-              echo "===== Fin ====="
-  
-            } > /home/sites/35a/1/165d81d6e0/deploy.log 2>&1
+            pwd
+            ls -la
+            touch github_test.txt
