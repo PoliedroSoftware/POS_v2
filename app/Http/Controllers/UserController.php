@@ -143,4 +143,17 @@ class UserController extends Controller
         }
         return redirect('user/profile')->with('status', $output);
     }
+
+
+
+    /**
+     * Retorna el usuario autenticado para la API.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \App\User|null
+     */
+    public function current(Request $request)
+    {
+        return $request->user();
+    }
 }
