@@ -62,29 +62,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Desplegar vía SSH en iPanel
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST_CLOUDPOLIEDRO }}
-          username: ${{ secrets.NAME_CLOUDPOLIEDRO }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}
-          port: 22
-          script: |
-            cd /home/sites/35a/1/165d81d6e0/testdeploy
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.HOST_CLOUDPOLIEDRO }} >> ~/.ssh/known_hosts
 
-            git pull origin main
-
-            mkdir -p storage/framework/cache/data
-            mkdir -p storage/framework/sessions
-            mkdir -p storage/framework/views
-            mkdir -p storage/framework/testing
-            mkdir -p storage/logs
-            mkdir -p bootstrap/cache
-
-            chmod -R 775 storage bootstrap/cache
-
-            composer install --no-dev --optimize-autoloader --no-interaction
-
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+      - name: Ejecutar deploy remoto
+        run: |
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -o StrictHostKeyChecking=yes \
+            ${{ secrets.NAME_CLOUDPOLIEDRO }}@${{ secrets.HOST_CLOUDPOLIEDRO }} \
+            "bash ~/deploy.sh"
