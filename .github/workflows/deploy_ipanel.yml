@@ -60,7 +60,7 @@ jobs:
     needs: laravel-tests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-
+  
     steps:
       - name: Configurar SSH
         run: |
@@ -68,7 +68,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY_CLOUDPOLIEDRO }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.HOST_CLOUDPOLIEDRO }} >> ~/.ssh/known_hosts
-
+  
       - name: Ejecutar deploy remoto
         run: |
           ssh \
